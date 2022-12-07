@@ -6,10 +6,10 @@ defmodule Day6 do
 		|> String.codepoints
 		|> Enum.split(@distinct_count - 1)
 
-		Enum.reduce_while(tail, {head, @distinct_count}, fn x, {chars, count} ->
-			uniq_chars = Enum.uniq(chars)
-			if x in chars or uniq_chars != chars,
-			do: {:cont, {Enum.drop(chars, 1) ++ [x], count + 1}},
+		Enum.reduce_while(tail, {head, @distinct_count}, fn x, {prev_chars, count} ->
+			chars = prev_chars ++ [x]
+			if Enum.uniq(chars) != chars,
+			do: {:cont, {Enum.drop(chars, 1), count + 1}},
 			else: {:halt, count}
 		end)
 		|> IO.inspect
