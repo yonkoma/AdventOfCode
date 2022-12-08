@@ -2,10 +2,9 @@ defmodule Day7 do
 	def parse_filetree do
 		File.read!("input.txt")
 		|> String.split("\n", trim: true)
-		|> Enum.drop(1)
-		|> Enum.reduce({["/"], %{"/" => %{}}}, fn cmd, {dir_stack, filetree} ->
+		|> Enum.reduce({[], %{"/" => %{}}}, fn cmd, {dir_stack, filetree} ->
 			case cmd do
-				<<"$ cd ..">> -> {Enum.drop(dir_stack, -1), filetree}
+				"$ cd .." -> {Enum.drop(dir_stack, -1), filetree}
 				<<"$ cd ", new_dir::binary>> -> {dir_stack ++ [new_dir], filetree}
 				<<"$ ls", _::binary>> -> {dir_stack, filetree}
 				<<"dir ", dir_name::binary>> -> {dir_stack, put_in(filetree, dir_stack ++ [dir_name], %{})}
@@ -23,7 +22,7 @@ defmodule Day7 do
 			folder, {total, size_list} when is_map(folder) -> 
 				{folder_size, folder_size_list} = convert_to_size_list(folder)
 				{folder_size + total, [folder_size | folder_size_list] ++ size_list}
-			size, {total, size_list} -> {size + total, size_list}
+			file_size, {total, size_list} -> {file_size + total, size_list}
 		end)
 	end
 
