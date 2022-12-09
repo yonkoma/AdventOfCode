@@ -9,11 +9,15 @@ defmodule Day8 do
 	end
 
 	def apply_in_directions trees, find_fun do
-		left = find_fun.(trees) |> List.flatten
-		right = Enum.map(trees, &Enum.reverse/1) |> find_fun.() |> Enum.map(&Enum.reverse/1) |> List.flatten
-		top = Enum.zip_with(trees, &Function.identity/1) |> find_fun.() |> Enum.zip_with(&Function.identity/1) |> List.flatten
-		bottom = Enum.zip_with(trees, &Function.identity/1) |> Enum.map(&Enum.reverse/1) |> find_fun.() |> Enum.map(&Enum.reverse/1) |> Enum.zip_with(&Function.identity/1) |> List.flatten
+		left = find_fun.(trees)
+		right = Enum.map(trees, &Enum.reverse/1) |> find_fun.() |> Enum.map(&Enum.reverse/1)
+		top = Enum.zip_with(trees, &Function.identity/1) |> find_fun.() |> Enum.zip_with(&Function.identity/1)
+		bottom = Enum.zip_with(trees, &Function.identity/1) |> Enum.map(&Enum.reverse/1) |> find_fun.() |> Enum.map(&Enum.reverse/1) |> Enum.zip_with(&Function.identity/1)
 		[left, right, top, bottom]
+		# Zip into flat list of values for each tree
+		|> Enum.map(&List.flatten/1)
+		|> Enum.zip
+		|> Enum.map(&Tuple.to_list/1)
 	end
 
 	def find_visible trees do
@@ -29,8 +33,8 @@ defmodule Day8 do
 
 	def find_scenic_score trees do
 		init_scenery_state = 
-			for i <- 0..9, into: %{} do
-				{i, 0}
+			for height <- 0..9, into: %{} do
+				{height, 0}
 			end
 		Enum.map(trees, fn row ->
 			Enum.map_reduce(row, init_scenery_state, fn tree, scenery_state ->
@@ -49,19 +53,13 @@ defmodule Day8 do
 	def part1 do
 		parse_input()
 		|> apply_in_directions(&find_visible/1)
-		|> Enum.zip
-		|> Enum.count(fn 
-			{false, false, false, false} -> false
-			_ -> true
-		end)
+		|> Enum.count(&Enum.any?/1)
 		|> IO.inspect
 	end
 
 	def part2 do
 		parse_input()
 		|> apply_in_directions(&find_scenic_score/1)
-		|> Enum.zip
-		|> Enum.map(&Tuple.to_list/1)
 		|> Enum.map(&Enum.product/1)
 		|> Enum.max
 		|> IO.inspect
