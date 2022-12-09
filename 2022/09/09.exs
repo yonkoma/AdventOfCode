@@ -22,39 +22,50 @@ defmodule Day8 do
 	end
 
 	def normalize x do
-		div(x, abs(x))
+		cond do
+			x == 0 -> 0
+			x > 0 -> 1
+			x < 0 -> -1
+		end
 	end
 
-	def do_movement motions, rope \\ {{0, 0}, {0, 0}}, visited \\ MapSet.new 
+	def do_movement motions, rope, visited \\ MapSet.new 
 	def do_movement [], _, visited do 
 		visited
 	end
 	def do_movement [{_, 0} | motions_tail], rope, visited do
 		do_movement motions_tail, rope, visited
 	end
-	def do_movement [{direction, count} | motions_tail], {head, tail}, visited do
+	def do_movement [{direction, count} | motions_tail], [head | tail], visited do
 		new_head = add(head, direction)
-		new_tail =
-			case diff(new_head, tail) do
-				{x, y} when abs(x) == 2 -> {normalize(x), y}
-				{x, y} when abs(y) == 2 -> {x, normalize(y)}
-				_ -> {0, 0}
-			end
-			|> add(tail)
-		do_movement [{direction, count - 1} | motions_tail], {new_head, new_tail}, MapSet.put(visited, new_tail)
+		new_tail = 
+			Enum.map_reduce(tail, new_head, fn knot, prev_knot ->
+				moved_knot = 
+					case diff(prev_knot, knot) do
+						{x, y} when abs(x) == 2 or abs(y) == 2 -> {normalize(x), normalize(y)}
+						_ -> {0, 0}
+					end
+					|> add(knot)
+				{moved_knot, moved_knot}
+			end)
+			|> elem(0)
+		do_movement [{direction, count - 1} | motions_tail], [new_head | new_tail], MapSet.put(visited, Enum.take(new_tail, -1))
 	end
 
 	def part1 do
 		parse_input()
-		|> do_movement()
+		|> do_movement(List.duplicate({0, 0}, 2))
 		|> Enum.count
 		|> IO.inspect
 	end
 
 	def part2 do
 		parse_input()
+		|> do_movement(List.duplicate({0, 0}, 10))
+		|> Enum.count
+		|> IO.inspect
 	end
 end
 
 Day8.part1
-# Day8.part2
+Day8.part2
