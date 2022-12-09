@@ -1,4 +1,4 @@
-defmodule Day8 do
+defmodule Day9 do
 	def parse_input do
 		File.read!("input.txt")
 		|> String.split("\n", trim: true)
@@ -21,7 +21,7 @@ defmodule Day8 do
 		{coord_a_x - coord_b_x, coord_a_y - coord_b_y}
 	end
 
-	def normalize x do
+	def sign x do
 		cond do
 			x == 0 -> 0
 			x > 0 -> 1
@@ -42,7 +42,7 @@ defmodule Day8 do
 			Enum.map_reduce(tail, new_head, fn knot, prev_knot ->
 				moved_knot = 
 					case diff(prev_knot, knot) do
-						{x, y} when abs(x) == 2 or abs(y) == 2 -> {normalize(x), normalize(y)}
+						{x, y} when abs(x) == 2 or abs(y) == 2 -> {sign(x), sign(y)}
 						_ -> {0, 0}
 					end
 					|> add(knot)
@@ -67,5 +67,5 @@ defmodule Day8 do
 	end
 end
 
-Day8.part1
-Day8.part2
+Day9.part1
+Day9.part2
