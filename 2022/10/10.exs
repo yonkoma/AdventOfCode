@@ -1,23 +1,18 @@
 defmodule Day10 do
 	def parse_input do
-		File.read!("input_2.txt")
+		File.read!("input.txt")
 		|> String.split("\n", trim: true)
-		|> Enum.map(fn
-			"noop" -> :noop
-			"addx " <> value -> {:addx, String.to_integer(value)}
-		end)
 	end
 
 	def generate_sprite_positions ops do
-		Enum.reduce(ops, [1], fn op, register_history ->
-			[register | _] = register_history
+		Enum.reduce(ops, [1], fn op, [register | _] = register_history ->
 			case op do
-				:noop -> [register | register_history]
-				{:addx, value} -> [value + register, register] ++ register_history
+				"noop" -> [register | register_history]
+				"addx " <> value -> [String.to_integer(value) + register, register] ++ register_history
 			end
 		end)
+		|> Enum.drop(1)
 		|> Enum.reverse
-		|> Enum.drop(-1)
 		|> Enum.with_index(1)
 	end
 
