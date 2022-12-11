@@ -22,19 +22,19 @@ defmodule Day11 do
 		end)
 	end
 
-	def do_monkey_rounds monkeys, rounds, index \\ 0
-	def do_monkey_rounds monkeys, 0, _ do
+	def do_monkey_rounds monkeys, deworry_fun, rounds, index \\ 0
+	def do_monkey_rounds monkeys, _, 0, _ do
 		monkeys
 	end
-	def do_monkey_rounds monkeys, rounds, index do
+	def do_monkey_rounds monkeys, deworry_fun, rounds, index do
 		cond do
 			index >= Enum.count(monkeys) ->
-				do_monkey_rounds(monkeys, rounds - 1, 0)
+				do_monkey_rounds(monkeys, deworry_fun, rounds - 1, 0)
 			Enum.empty?(monkeys[index][:items]) ->
-				do_monkey_rounds(monkeys, rounds, index + 1)
+				do_monkey_rounds(monkeys, deworry_fun, rounds, index + 1)
 			true ->
 				[item | rest_items] = monkeys[index][:items]
-				new_worry = monkeys[index][:op].(item) |> div(3)
+				new_worry = monkeys[index][:op].(item) |> deworry_fun.()
 				divisible = rem(new_worry, monkeys[index][:div_test]) == 0
 				destination = monkeys[index][divisible]
 				new_monkey_items = monkeys[destination][:items] ++ [new_worry]
@@ -43,24 +43,34 @@ defmodule Day11 do
 				|> put_in([index, :items], rest_items)
 				|> put_in([destination, :items], new_monkey_items)
 				|> update_in([index, :inspections], &(&1 + 1))
-				|> do_monkey_rounds(rounds, index)
+				|> do_monkey_rounds(deworry_fun, rounds, index)
 		end
+	end
+
+	def calc_monkey_business monkeys do
+		Enum.map(monkeys, fn {_, monkey} -> monkey[:inspections] end)
+		|> Enum.sort(:desc)
+		|> Enum.take(2)
+		|> Enum.product
+		|> IO.inspect
 	end
 
 	def part1 do
 		parse_input()
-		|> do_monkey_rounds(20)
-		|> Enum.map(fn {_, monkey} -> monkey[:inspections] end)
-		|> Enum.sort(:desc)
-		|> Enum.take(2)
-		|> Enum.product
-		|> IO.inspect(charlists: :as_lists)
+		|> do_monkey_rounds(&div(&1, 3), 20)
+		|> calc_monkey_business()
 	end
 
 	def part2 do
-		parse_input()
+		monkeys = parse_input()
+		common_div = 
+			Enum.map(monkeys, fn {_, monkey} -> monkey[:div_test] end)
+			|> Enum.product
+
+		do_monkey_rounds(monkeys, &rem(&1, common_div), 10_000)
+		|> calc_monkey_business()
 	end
 end
 
 Day11.part1
-# Day11.part2
+Day11.part2
