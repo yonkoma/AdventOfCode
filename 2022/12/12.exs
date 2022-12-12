@@ -11,11 +11,11 @@ defmodule Day12 do
 			end)
 		end)
 		|> List.flatten
-		|> Enum.reduce({%{}, 0, 0}, fn {coord, elevation}, {map, start, goal} ->
+		|> Enum.reduce({%{}, %{}, 0, 0}, fn {coord, elevation}, {map, dists, start, goal} ->
 			case elevation do
-				?S -> {Map.put(map, coord, 0), coord, goal}
-				?E -> {Map.put(map, coord, 25), start, coord}
-				letter -> {Map.put(map, coord, letter - ?a), start, goal}
+				?S -> {Map.put(map, coord, 0), Map.put(dists, coord, 0), coord, goal}
+				?E -> {Map.put(map, coord, 25), Map.put(dists, coord, :infinity), start, coord}
+				letter -> {Map.put(map, coord, letter - ?a), Map.put(dists, coord, :infinity), start, goal}
 			end
 		end)
 	end
@@ -25,40 +25,27 @@ defmodule Day12 do
 		|> Enum.filter(&Map.has_key?(map, &1))
 	end
 
-	def find_path(_, goal, path) when hd(path) == goal do
-		path
+	def find_path(_, dists, []) do
+		dists
 	end
-	def find_path(map, goal, path) do
-		pos = hd(path)
-		
-		goal_paths =
-			get_adjacent(map, pos)
-			|> Enum.filter(&(Map.fetch!(map, &1) >= (Map.fetch!(map, pos) - 1)))
-			|> Enum.reject(&(&1 in path))
-			|> Enum.reduce([], fn next_step, path_acc ->
-				case find_path(map, goal, [next_step | path]) do
-					:fail -> path_acc
-					goal_path -> [goal_path | path_acc]
-				end
-			end)
-			|> Enum.sort(& length(&1) <+ length(&2))
-
-		if Enum.empty?(goal_paths) do
-			:fail
-		else			
-			hd(goal_paths)
-		end
+	def find_path(map, dists, [step | frontier]) do
+		new_steps =
+			get_adjacent(map, step)
+			|> Enum.filter(&(map[&1] <= (map[step] + 1)))
+			|> Enum.filter(&(dists[step] + 1 < dists[&1]))
+		new_dists = Enum.reduce(new_steps, dists, &%{&2 | &1 => dists[step] + 1})
+		find_path(map, new_dists, new_steps ++ frontier)
 	end
 
 	def part1 do
-		{map, start, goal} = parse_input()
-		find_path(map, start, [goal])
-		|> Enum.drop(1)
-		|> length()
+		{map, dists, start, goal} = parse_input()
+
+		find_path(map, dists, [start])
+		|> Map.fetch!(goal)
 		|> IO.inspect
 	end
 
 end
 
-# Day12.part1
+Day12.part1
 # Day12.part2
