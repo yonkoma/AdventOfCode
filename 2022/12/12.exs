@@ -11,11 +11,11 @@ defmodule Day12 do
 			end)
 		end)
 		|> List.flatten
-		|> Enum.reduce({%{}, %{}, 0, 0}, fn {coord, elevation}, {map, dists, start, goal} ->
+		|> Enum.reduce({%{}, 0, 0}, fn {coord, elevation}, {map, start, goal} ->
 			case elevation do
-				?S -> {Map.put(map, coord, 0), Map.put(dists, coord, 0), coord, goal}
-				?E -> {Map.put(map, coord, 25), Map.put(dists, coord, :infinity), start, coord}
-				letter -> {Map.put(map, coord, letter - ?a), Map.put(dists, coord, :infinity), start, goal}
+				?S -> {Map.put(map, coord, 0), coord, goal}
+				?E -> {Map.put(map, coord, 25), start, coord}
+				letter -> {Map.put(map, coord, letter - ?a), start, goal}
 			end
 		end)
 	end
@@ -25,27 +25,39 @@ defmodule Day12 do
 		|> Enum.filter(&Map.has_key?(map, &1))
 	end
 
-	def find_path(_, dists, []) do
+	def find_path(_, dists, _, []) do
 		dists
 	end
-	def find_path(map, dists, [step | frontier]) do
+	def find_path(map, dists, valid_step?, [step | frontier]) do
 		new_steps =
 			get_adjacent(map, step)
-			|> Enum.filter(&(map[&1] <= (map[step] + 1)))
+			|> Enum.filter(&valid_step?.(map[step], map[&1]))
 			|> Enum.filter(&(dists[step] + 1 < dists[&1]))
 		new_dists = Enum.reduce(new_steps, dists, &%{&2 | &1 => dists[step] + 1})
-		find_path(map, new_dists, new_steps ++ frontier)
+		find_path(map, new_dists, valid_step?, new_steps ++ frontier)
 	end
 
 	def part1 do
-		{map, dists, start, goal} = parse_input()
+		{map, start, goal} = parse_input()
+		dists = Map.new(Map.keys(map), &{&1, :infinity}) |> Map.put(start, 0)
 
-		find_path(map, dists, [start])
+		find_path(map, dists, &(&1 + 1 >= &2), [start])
 		|> Map.fetch!(goal)
+		|> IO.inspect
+	end
+
+	def part2 do
+		{map, _, goal} = parse_input()
+		dists = Map.new(Map.keys(map), &{&1, :infinity}) |> Map.put(goal, 0)
+
+		find_path(map, dists, &(&1 - 1 <= &2), [goal])
+		|> Map.filter(fn {coord, _} -> map[coord] == 0 end)
+		|> Map.values
+		|> Enum.min
 		|> IO.inspect
 	end
 
 end
 
 Day12.part1
-# Day12.part2
+Day12.part2
