@@ -34,7 +34,7 @@ defmodule Day12 do
 			|> Enum.filter(&valid_step?.(map[step], map[&1]))
 			|> Enum.filter(&(dists[step] + 1 < dists[&1]))
 		new_dists = Enum.reduce(new_steps, dists, &%{&2 | &1 => dists[step] + 1})
-		find_path(map, new_dists, valid_step?, new_steps ++ frontier)
+		find_path(map, new_dists, valid_step?, frontier ++ new_steps)
 	end
 
 	def part1 do
