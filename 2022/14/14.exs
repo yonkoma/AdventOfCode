@@ -1,4 +1,6 @@
 defmodule Day14 do
+	@sand_start {500, 0}
+
 	def parse_input() do
 		File.read!("input.txt")
 		|> String.split("\n", trim: true)
@@ -52,33 +54,49 @@ defmodule Day14 do
 		Map.keys(rocks)
 		|> Enum.map(&elem(&1, 1))
 		|> Enum.max
+		|> Kernel.+(1)
 	end
 
-	def pour_sand(rocks) do
-		pour_sand(rocks, rock_bottom(rocks))
+	def pour_sand(map, fill_floor?) do
+		pour_sand(map, fill_floor? , rock_bottom(map), @sand_start)
 	end
-	def pour_sand(rocks, bottom) do
-		pour_sand(rocks, bottom, {500, 0})
+	def pour_sand(map, fill_floor?, bottom, sand = {_, sand_y}) when sand_y == bottom do
+		if fill_floor? do
+			Map.put(map, sand, "o")
+			|> pour_sand(fill_floor?, bottom, @sand_start)
+		else
+			map
+		end
 	end
-	def pour_sand(map, bottom, {_, sand_y}) when sand_y > bottom do
-		map
-	end
-	def pour_sand(map, bottom, {sand_x, sand_y}) do
+	def pour_sand(map, fill_floor?, bottom, sand = {sand_x, sand_y}) do
+		# IO.inspect(sand)
 		new_sand =
 			[{sand_x, sand_y + 1}, {sand_x - 1, sand_y + 1}, {sand_x + 1, sand_y + 1}]
 			|> Enum.find(& not Map.has_key?(map, &1))
-		if new_sand != nil do
-			pour_sand(map, bottom, new_sand)
-		else
-			Map.put(map, {sand_x, sand_y}, "o")
-			|> pour_sand(bottom)
+		cond do
+			new_sand != nil ->
+				pour_sand(map, fill_floor?, bottom, new_sand)
+			sand == {500, 0} ->
+				Map.put(map, sand, "o")
+			true ->
+				Map.put(map, sand, "o")
+				|> pour_sand(fill_floor?, bottom, @sand_start)
 		end
 	end
 
 	def part1() do
 		parse_input()
 		|> make_rock_map()
-		|> pour_sand()
+		|> pour_sand(false)
+		|> Map.values
+		|> Enum.count(& &1 == "o")
+		|> IO.inspect
+	end
+
+	def part2() do
+		parse_input()
+		|> make_rock_map()
+		|> pour_sand(true)
 		|> Map.values
 		|> Enum.count(& &1 == "o")
 		|> IO.inspect
@@ -86,3 +104,4 @@ defmodule Day14 do
 end
 
 Day14.part1
+Day14.part2
